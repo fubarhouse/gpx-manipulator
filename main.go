@@ -87,10 +87,28 @@ func ProcessGPX(gpx *gpxtypes.GPX) {
 
 					// Rewrite output
 					trkPts = append(trkPts, gpxtypes.TrkPt{
-						Lat:       pt.Lat,
-						Lon:       pt.Lon,
-						Elevation: pt.Elevation,
-						Time:      &wantedTime,
+						XMLName:       pt.XMLName,
+						Lat:           pt.Lat,
+						Lon:           pt.Lon,
+						Elevation:     pt.Elevation,
+						Time:          &wantedTime,
+						MagVar:        pt.MagVar,
+						GeoIDHeight:   pt.GeoIDHeight,
+						Name:          pt.Name,
+						Cmt:           pt.Cmt,
+						Desc:          pt.Desc,
+						Src:           pt.Src,
+						Link:          pt.Link,
+						Sym:           pt.Sym,
+						Type:          pt.Type,
+						Fix:           pt.Fix,
+						Sat:           pt.Sat,
+						HDOP:          pt.HDOP,
+						VDOP:          pt.VDOP,
+						PDOP:          pt.PDOP,
+						AgeOfDGPSData: pt.AgeOfDGPSData,
+						DGPSID:        pt.DGPSID,
+						Extensions:    pt.Extensions,
 					})
 				}
 			}
