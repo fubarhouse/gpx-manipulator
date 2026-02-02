@@ -44,7 +44,9 @@ func main() {
 	}
 
 	// Process the data in the input GPX data file.
-	ProcessGPX(&gpx)
+	if !disableRewriting {
+		ProcessGPX(&gpx)
+	}
 
 	// Marshall/read new data into memory.
 	marshaled, err := xml.MarshalIndent(gpx, "", "  ")
@@ -73,49 +75,16 @@ func toZone(t time.Time) (time.Time, error) {
 func ProcessGPX(gpx *gpxtypes.GPX) {
 	for i, trk := range gpx.Tracks {
 		for n, seg := range trk.Segs {
-			trkPts := make([]gpxtypes.TrkPt, 0, len(gpx.Tracks))
-			for _, pt := range seg.Points {
+			for p, pt := range seg.Points {
 				if pt.Time != nil {
 					var wantedTime = *pt.Time
 
-					// Rework time if desired.
-					if !disableRewriting {
-						originalTime, _ := time.Parse(time.RFC3339, *pt.Time)
-						syd, _ := toZone(originalTime)
-						wantedTime = syd.Format(time.RFC3339)
-					}
+					originalTime, _ := time.Parse(time.RFC3339, *pt.Time)
+					syd, _ := toZone(originalTime)
+					wantedTime = syd.Format(time.RFC3339)
+					gpx.Tracks[i].Segs[n].Points[p].Time = &wantedTime
 
-					// Rewrite output
-					trkPts = append(trkPts, gpxtypes.TrkPt{
-						XMLName:       pt.XMLName,
-						Lat:           pt.Lat,
-						Lon:           pt.Lon,
-						Elevation:     pt.Elevation,
-						Time:          &wantedTime,
-						MagVar:        pt.MagVar,
-						GeoIDHeight:   pt.GeoIDHeight,
-						Name:          pt.Name,
-						Cmt:           pt.Cmt,
-						Desc:          pt.Desc,
-						Src:           pt.Src,
-						Link:          pt.Link,
-						Sym:           pt.Sym,
-						Type:          pt.Type,
-						Fix:           pt.Fix,
-						Sat:           pt.Sat,
-						HDOP:          pt.HDOP,
-						VDOP:          pt.VDOP,
-						PDOP:          pt.PDOP,
-						AgeOfDGPSData: pt.AgeOfDGPSData,
-						DGPSID:        pt.DGPSID,
-						Extensions:    pt.Extensions,
-					})
 				}
-			}
-
-			// Replace existing trkpts.
-			if !disableRewriting {
-				gpx.Tracks[i].Segs[n].Points = trkPts
 			}
 		}
 	}
