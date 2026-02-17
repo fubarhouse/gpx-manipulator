@@ -17,7 +17,20 @@ var (
 	input            string
 	output           string
 	disableRewriting bool
+	timeDiff         string
+
+	TimeDifference time.Duration
+	err            error
 )
+
+// timeInputValidation will Parse input the time variable.
+func timeInputValidation() {
+	TimeDifference, err = time.ParseDuration(timeDiff)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid input for add-time %q: %v\n", timeDiff, err)
+		os.Exit(1)
+	}
+}
 
 func main() {
 	// Validate input
@@ -25,7 +38,13 @@ func main() {
 	flag.StringVar(&input, "input", "", "")
 	flag.StringVar(&output, "output", "", "")
 	flag.BoolVar(&disableRewriting, "disable-rewriting", false, "")
+	flag.StringVar(&timeDiff, "add-time", "", "Difference in duration to GPX data-set, each timestamp will add or remove this duration")
 	flag.Parse()
+
+	// Validate the input time variable.
+	if timeDiff != "" {
+		timeInputValidation()
+	}
 
 	// Open input file
 	f, err := os.Open(input)
@@ -80,10 +99,14 @@ func ProcessGPX(gpx *gpxtypes.GPX) {
 					var wantedTime = *pt.Time
 
 					originalTime, _ := time.Parse(time.RFC3339, *pt.Time)
-					syd, _ := toZone(originalTime)
-					wantedTime = syd.Format(time.RFC3339)
-					gpx.Tracks[i].Segs[n].Points[p].Time = &wantedTime
+					newTime, _ := toZone(originalTime)
 
+					if TimeDifference != 0 {
+						newTime = newTime.Add(TimeDifference)
+					}
+
+					wantedTime = newTime.Format(time.RFC3339)
+					gpx.Tracks[i].Segs[n].Points[p].Time = &wantedTime
 				}
 			}
 		}
