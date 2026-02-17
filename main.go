@@ -34,7 +34,7 @@ func timeInputValidation() {
 
 func main() {
 	// Validate input
-	flag.StringVar(&timezone, "timezone", "Australia/Sydney", "")
+	flag.StringVar(&timezone, "timezone", "", "")
 	flag.StringVar(&input, "input", "", "")
 	flag.StringVar(&output, "output", "", "")
 	flag.BoolVar(&disableRewriting, "disable-rewriting", false, "")
@@ -99,7 +99,15 @@ func ProcessGPX(gpx *gpxtypes.GPX) {
 					var wantedTime = *pt.Time
 
 					originalTime, _ := time.Parse(time.RFC3339, *pt.Time)
-					newTime, _ := toZone(originalTime)
+					newTime := originalTime
+
+					if timezone != "" {
+						newTime, err = toZone(originalTime)
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "cannot parse time %q: %v", *pt.Time, err)
+							os.Exit(1)
+						}
+					}
 
 					if TimeDifference != 0 {
 						newTime = newTime.Add(TimeDifference)
